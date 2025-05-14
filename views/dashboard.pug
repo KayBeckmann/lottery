@@ -1,0 +1,32 @@
+extends layout.pug
+
+block content
+  h1 Dashboard für #{username}
+
+  div.ticket-info
+    h2 Deine Tickets
+    if userTicketCount > 0
+      p Du hast aktuell 
+        strong #{userTicketCount} 
+        | Ticket#{userTicketCount > 1 ? 's' : ''} gekauft.
+      p Deine Losnummer#{userTicketCount > 1 ? 'n' : ''}:
+      ul.ticket-numbers
+        each num in userTicketNumbers
+          li #{num}
+    else
+      p Du hast noch keine Tickets gekauft.
+
+  hr
+
+  div.ticket-info
+    h2 Ticket-Verkauf Status
+    p Insgesamt verkaufte Tickets: 
+      strong #{totalSoldTickets} / #{maxTickets}
+    if remainingTickets > 0
+      p Noch verfügbare Tickets bis zur Ziehung: 
+        strong #{remainingTickets}
+    else
+      p Alle Tickets sind verkauft! Die Ziehung kann bald beginnen.
+
+  // Später hier einen Button zum Ticketkauf etc. hinzufügen
+  // a(href="/buy-ticket" class="btn btn-primary") Ticket kaufen

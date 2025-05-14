@@ -1,0 +1,4 @@
+PORT=3000
+# DATABASE_URL=postgresql://DEIN_DB_BENUTZER:DEIN_DB_PASSWORT@DEIN_DB_HOST:DEIN_DB_PORT/DEINE_DB_NAME
+# Beispiel für eine lokale PostgreSQL-Installation:
+DATABASE_URL=postgresql://postgres:passwort@localhost:5432/btc_ticket_db

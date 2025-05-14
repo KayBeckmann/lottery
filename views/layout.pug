@@ -1,0 +1,35 @@
+doctype html
+html(lang="de")
+  head
+    meta(charset="UTF-A")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title #{pageTitle} - BTC Ticket App
+    // Hier könntest du später CSS-Frameworks oder eigene Stylesheets einbinden
+    // link(rel="stylesheet", href="/css/style.css")
+    style.
+      body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+      .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+      h1, h2 { color: #0056b3; }
+      .ticket-info { margin-bottom: 15px; }
+      .ticket-numbers { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+      .ticket-numbers li { background-color: #e9ecef; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
+      nav { background-color: #0056b3; padding: 10px; margin-bottom: 20px; border-radius: 4px; }
+      nav a { color: white; margin-right: 15px; text-decoration: none; }
+      nav a:hover { text-decoration: underline; }
+
+  body
+    nav
+      a(href="/") Start
+      a(href="/dashboard") Mein Dashboard
+      // Später:
+      // if isAuthenticated
+      //   a(href="/auth/logout") Abmelden
+      // else
+      //   a(href="/auth/login") Anmelden
+      //   a(href="/auth/register") Registrieren
+
+    div.container
+      block content
+
+    footer(style="text-align:center; margin-top: 30px; font-size: 0.9em; color: #777;")
+      p &copy; #{new Date().getFullYear()} Deine BTC Ticket App
