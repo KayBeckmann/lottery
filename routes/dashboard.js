@@ -3,10 +3,17 @@ const router = express.Router();
 const db = require('../db'); // Unser Datenbankmodul
 
 // Dashboard-Route
-router.get('/', async (req, res) => {
-    // SIMULATION eines angemeldeten Benutzers
-    // Später wird diese ID aus der Session des angemeldeten Benutzers kommen
-    const currentUserId = 1; // Annahme: Benutzer mit ID 1 ist angemeldet (TestUser)
+router.get('/', async (req, res, next) => { // next für Fehlerbehandlung hinzugefügt
+    // Der angemeldete Benutzer wird jetzt durch die Middleware in app.js in req.user bereitgestellt
+    if (!req.user || !req.user.id) {
+        // Sollte nicht passieren, wenn die Simulations-Middleware aktiv ist und korrekt funktioniert
+        console.error("Dashboard: req.user oder req.user.id nicht verfügbar.");
+        // In einer echten App würde hier vielleicht ein Redirect zum Login erfolgen
+        return res.status(401).send('Nicht authentifiziert. Bitte zuerst anmelden.');
+    }
+
+    const currentUserId = req.user.id; // UUID vom simulierten/angemeldeten Benutzer
+    const currentUsername = req.user.username;
 
     try {
         // 1. Gekaufte Tickets des Benutzers (Anzahl und Nummern)
@@ -14,7 +21,7 @@ router.get('/', async (req, res) => {
             'SELECT ticket_number FROM tickets WHERE user_id = $1 AND status = $2 ORDER BY ticket_number ASC',
             [currentUserId, 'paid']
         );
-        const userTickets = userTicketsResult.rows; // Array von Objekten, z.B. [{ticket_number: 101}, {ticket_number: 102}]
+        const userTickets = userTicketsResult.rows;
         const userTicketCount = userTickets.length;
         const userTicketNumbers = userTickets.map(ticket => ticket.ticket_number);
 
@@ -29,12 +36,14 @@ router.get('/', async (req, res) => {
             "SELECT setting_value FROM settings WHERE setting_key = 'max_tickets'"
         );
         let maxTickets = 100; // Standardwert, falls nicht in DB gefunden
-        if (maxTicketsSettingResult.rows.length > 0) {
+        if (maxTicketsSettingResult.rows.length > 0 && maxTicketsSettingResult.rows[0].setting_value) {
             maxTickets = parseInt(maxTicketsSettingResult.rows[0].setting_value, 10);
+        } else {
+            console.warn("Einstellung 'max_tickets' nicht in der Datenbank gefunden oder Wert ist null. Standardwert 100 wird verwendet.");
         }
 
         // 4. Verbleibende Tickets berechnen
-        const remainingTickets = Math.max(0, maxTickets - totalSoldTickets); // Stellt sicher, dass es nicht negativ wird
+        const remainingTickets = Math.max(0, maxTickets - totalSoldTickets);
 
         // Daten an das Pug-Template übergeben
         res.render('dashboard', {
@@ -44,13 +53,15 @@ router.get('/', async (req, res) => {
             totalSoldTickets: totalSoldTickets,
             maxTickets: maxTickets,
             remainingTickets: remainingTickets,
-            // Später hier den echten Benutzernamen übergeben
-            username: 'TestUser (Simuliert)' // Platzhalter
+            username: currentUsername
         });
 
     } catch (err) {
         console.error('Fehler beim Laden des Dashboards:', err);
-        res.status(500).send('Fehler beim Laden der Dashboard-Daten.');
+        // Fehler an den globalen Fehlerhandler weiterleiten
+        // Stellt sicher, dass der Fehlerhandler in app.js eine err.status Eigenschaft hat
+        err.status = err.status || 500;
+        next(err);
     }
 });
 
