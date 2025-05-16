@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432" # Mappt den Port vom Container auf deinen Host
     volumes:
-      - postgres_data:/var/lib/postgresql/data # Persistente Speicherung der Daten
+      - ./postgres_data:/var/lib/postgresql/data # Persistente Speicherung der Daten
       - ./initdb:/docker-entrypoint-initdb.d # Verzeichnis mit Initialisierungs-Skripten
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d btc_ticket_db"]
@@ -20,5 +20,5 @@ services:
       timeout: 5s
       retries: 5
 
-volumes:
-  postgres_data: # Definiert das benannte Volume für die Datenpersistenz
+#volumes:
+  #postgres_data: # Definiert das benannte Volume für die Datenpersistenz
