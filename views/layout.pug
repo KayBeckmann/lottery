@@ -4,8 +4,6 @@ html(lang="de")
     meta(charset="UTF-A")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
     title #{pageTitle} - BTC Ticket App
-    // Hier könntest du später CSS-Frameworks oder eigene Stylesheets einbinden
-    // link(rel="stylesheet", href="/css/style.css")
     style.
       body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
       .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
@@ -20,20 +18,22 @@ html(lang="de")
   body
     nav
       a(href="/") Start
-      // if isAuthenticated // Sobald echte Authentifizierung da ist
-      if currentUser // Für unsere Simulation
+      //- if isAuthenticated // Sobald echte Authentifizierung da ist
+      //- Für unsere Simulation:
+      if currentUser
         a(href="/dashboard") Mein Dashboard
-        if currentUser.role === 'admin' // Nur für Admins
+        //- Nur für Admins:
+        if currentUser.role === 'admin'
           a(href="/admin") Admin Bereich
-      // Später:
-      // if isAuthenticated
-      //   a(href="/auth/logout") Abmelden
-      // else
-      //   a(href="/auth/login") Anmelden
-      //   a(href="/auth/register") Registrieren
+      //- Später für echten Login/Logout:
+      //- if isAuthenticated
+      //-   a(href="/auth/logout") Abmelden
+      //- else
+      //-   a(href="/auth/login") Anmelden
+      //-   a(href="/auth/register") Registrieren
 
     div.container
       block content
-
+    
     footer(style="text-align:center; margin-top: 30px; font-size: 0.9em; color: #777;")
       p &copy; #{new Date().getFullYear()} Deine BTC Ticket App
