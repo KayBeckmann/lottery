@@ -1,0 +1,27 @@
+extends ../layout.pug
+
+block content
+  h1 Verlosungseinstellungen
+
+  //- Hier Flash-Nachrichten anzeigen, wenn connect-flash eingerichtet ist
+  //- include ../partials/messages
+
+  form(action="/admin/settings" method="POST")
+    .form-group(style="margin-bottom: 15px;")
+      label(for="max_tickets") Maximale Anzahl an Tickets:
+      input.form-control(type="number" id="max_tickets" name="max_tickets" value=settings.max_tickets || 100 min="1" style="width: 200px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;")
+
+    .form-group(style="margin-bottom: 15px;")
+      label(for="btc_ticket_price") Ticketpreis in BTC (z.B. 0.001):
+      input.form-control(type="text" id="btc_ticket_price" name="btc_ticket_price" value=settings.btc_ticket_price || '0.001' style="width: 200px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;")
+
+    .form-group(style="margin-bottom: 15px;")
+      label(for="processing_fee_btc") Bearbeitungsgebühr in BTC (z.B. 0.0001):
+      input.form-control(type="text" id="processing_fee_btc" name="processing_fee_btc" value=settings.processing_fee_btc || '0.0001' style="width: 200px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;")
+
+    //- Weitere Einstellungen hier...
+
+    button.btn.btn-primary(type="submit" style="padding: 10px 15px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer;") Einstellungen speichern
+
+  hr
+  a(href="/admin") Zurück zum Admin Dashboard

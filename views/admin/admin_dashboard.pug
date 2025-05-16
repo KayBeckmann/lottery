@@ -1,0 +1,16 @@
+extends ../layout.pug
+
+block content
+  h1 Admin Dashboard
+
+  p Willkommen im Admin-Bereich, #{currentUser.username}!
+
+  h2 Aktionen
+  ul
+    li
+      a(href="/admin/settings") Verlosungseinstellungen
+    li
+      a(href="/admin/import-wallets") Wallet-Adressen importieren
+    //- Weitere Links hier...
+    //- li
+    //-   a(href="/admin/lotteries/new") Neue Lotterie erstellen (zukünftig)

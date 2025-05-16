@@ -20,7 +20,11 @@ html(lang="de")
   body
     nav
       a(href="/") Start
-      a(href="/dashboard") Mein Dashboard
+      // if isAuthenticated // Sobald echte Authentifizierung da ist
+      if currentUser // Für unsere Simulation
+        a(href="/dashboard") Mein Dashboard
+        if currentUser.role === 'admin' // Nur für Admins
+          a(href="/admin") Admin Bereich
       // Später:
       // if isAuthenticated
       //   a(href="/auth/logout") Abmelden
