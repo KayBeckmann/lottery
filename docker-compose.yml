@@ -2,23 +2,76 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:15 # Du kannst hier eine spezifische PostgreSQL-Version verwenden
+    image: postgres:15
     container_name: btc_ticket_postgres_dev
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: passwort # Entspricht dem Passwort in deiner DATABASE_URL
-      POSTGRES_DB: btc_ticket_db   # Entspricht der Datenbank in deiner DATABASE_URL
+      POSTGRES_USER: postgres # Sollte mit deiner .env übereinstimmen oder hier als Quelle dienen
+      POSTGRES_PASSWORD: passwort # Sollte mit deiner .env übereinstimmen
+      POSTGRES_DB: btc_ticket_db   # Sollte mit deiner .env übereinstimmen
     ports:
-      - "5432:5432" # Mappt den Port vom Container auf deinen Host
+      - "5432:5432" # Mappt den DB-Port auf deinen Host (für direkten Zugriff z.B. mit pgAdmin)
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data # Persistente Speicherung der Daten
-      - ./initdb:/docker-entrypoint-initdb.d # Verzeichnis mit Initialisierungs-Skripten
+      - ./postgres_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d # Stellt sicher, dass init.sql im initdb-Ordner ist
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d btc_ticket_db"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app_network
 
-#volumes:
-  #postgres_data: # Definiert das benannte Volume für die Datenpersistenz
+  app:
+    build: . # Sagt Docker Compose, das Image aus dem Dockerfile im aktuellen Verzeichnis zu bauen
+    container_name: btc_ticket_app_dev
+    restart: always
+    ports:
+      # Mappt den Port der App auf deinen Host - nützlich für lokales Testen ohne Tor.
+      # Kann auskommentiert werden, wenn der Zugriff ausschließlich über Tor erfolgen soll.
+      - "3000:3000"
+    environment:
+      # Die Express-App muss die Datenbank über den Service-Namen 'db' erreichen.
+      DATABASE_URL: postgresql://postgres:passwort@db:5432/btc_ticket_db
+      PORT: 3000 # Der Port, auf dem die Node-App im Container lauscht
+      NODE_ENV: development # Auf 'production' setzen für Live-Deployments
+      # Hier könnten weitere Umgebungsvariablen aus deiner .env-Datei für die App stehen,
+      # oder du verwendest eine .env-Datei spezifisch für den Container (siehe Docker Compose Doku).
+      # Beispiel: SESSION_SECRET=${SESSION_SECRET} (wenn SESSION_SECRET in deiner .env auf dem Host ist)
+    volumes:
+      # Mountet den aktuellen Ordner in den Container für Live-Code-Änderungen während der Entwicklung.
+      # Für Produktion würdest du dies normalerweise nicht tun, da der Code ins Image kopiert wird.
+      # Sei vorsichtig mit node_modules; das kann zu Problemen führen, wenn Host und Container unterschiedliche Architekturen haben.
+      # Eine gängige Methode ist, node_modules im Container zu belassen und nicht zu mounten:
+      # - .:/usr/src/app
+      # - /usr/src/app/node_modules
+      - .:/usr/src/app
+    depends_on:
+      db:
+        condition: service_healthy # Startet die App erst, wenn die DB "healthy" ist
+    networks:
+      - app_network
+
+  tor:
+    image: goldy/tor-hidden-service:latest # Ein einfaches Image für Tor Hidden Services
+    container_name: btc_ticket_tor_hidden_service
+    restart: always
+    depends_on:
+      - app # Stellt sicher, dass die App vor dem Tor-Service (versucht zu) starten
+    environment:
+      # Ziel, zu dem der Onion-Service weiterleiten soll
+      HIDDEN_SERVICE_HOST: "app"  # Der Service-Name deiner Express-Anwendung
+      HIDDEN_SERVICE_PORT: "3000" # Der Port, auf dem deine Express-App im Container lauscht
+
+      # Der Port, auf dem der Onion-Service im Tor-Netzwerk lauschen soll (meist 80 für HTTP)
+      VIRTUAL_PORT: "80"      # HIDDEN_SERVICE_NAME: "btc_ticket_service"
+    volumes:
+      # Dieses Volume ist sehr wichtig! Es speichert die Schlüssel und den Hostnamen deines Onion-Services.
+      # Wenn du dieses Volume verlierst, verlierst du deine .onion-Adresse.
+      - ./tor_hidden_service_data:/var/lib/tor/hidden_service/
+    networks:
+      - app_network
+
+networks:
+  app_network: # Definiert ein gemeinsames Netzwerk für die Kommunikation zwischen den Containern
+    driver: bridge
