@@ -3,26 +3,30 @@ extends ../layout.pug
 block content
   h1 Wallet-Adressen importieren
 
-  //- Hier Flash-Nachrichten anzeigen, wenn connect-flash eingerichtet ist
-  //- include ../partials/messages
+  //- Flash-Nachrichten (wenn connect-flash eingerichtet ist)
+  //- if success_msg && success_msg.length > 0
+  //-   .alert.alert-success #{success_msg}
+  //- if error_msg && error_msg.length > 0
+  //-   .alert.alert-danger #{error_msg}
 
   h2 Als CSV-Datei importieren
   p Die CSV-Datei sollte eine Spalte mit dem Header "public_address" (oder nur eine Spalte mit Adressen) enthalten.
   form(action="/admin/import-wallets-csv" method="POST" enctype="multipart/form-data" style="margin-bottom: 30px;")
-    .form-group(style="margin-bottom: 10px;")
+    .form-group
       label(for="walletCsv") CSV-Datei auswählen:
       input.form-control-file(type="file" id="walletCsv" name="walletCsv" accept=".csv" required)
-    button.btn.btn-primary(type="submit" style="padding: 10px 15px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer;") CSV importieren
+    button.btn.btn-primary(type="submit") CSV importieren
 
   hr(style="margin: 30px 0;")
 
   h2 Als Liste einfügen
   p Füge eine Liste von Bitcoin-Adressen ein, getrennt durch Zeilenumbruch, Komma, Semikolon oder Leerzeichen.
   form(action="/admin/import-wallets-list" method="POST")
-    .form-group(style="margin-bottom: 10px;")
+    .form-group
       label(for="walletList") Wallet-Adressen:
-      textarea#walletList.form-control(name="walletList" rows="10" placeholder="1BitcoinAddress1...\n1AnotherAddress2..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; min-height: 150px;")
-    button.btn.btn-primary(type="submit" style="padding: 10px 15px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer;") Liste importieren
+      textarea#walletList.form-control(name="walletList" rows="10" placeholder="1BitcoinAddress1...\n1AnotherAddress2...")
+    button.btn.btn-primary(type="submit") Liste importieren
 
   hr
-  a(href="/admin") Zurück zum Admin Dashboard
+  p
+    a(href="/admin") Zurück zum Admin Dashboard

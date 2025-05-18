@@ -2,6 +2,22 @@ extends layout.pug
 
 block content
   h1 Willkommen bei der BTC Ticket App!
-  p Dies ist die Startseite.
-  p
-    a(href="/dashboard") Gehe zum Dashboard (Simulierter Login)
+  p Dies ist die Startseite. Aktuell dient sie als einfacher Einstiegspunkt.
+  
+  if currentUser
+    p
+      a.btn.btn-primary(href="/dashboard") Gehe zum Dashboard
+  else
+    p Bitte melde dich an, um teilzunehmen. (Hinweis: Login ist aktuell simuliert)
+
+  // Optional: Hier könnten auch öffentlich sichtbare, offene Ziehungen aufgelistet werden.
+  // Dies würde erfordern, dass die '/' Route in app.js die Ziehungsdaten an dieses Template übergibt.
+  // h2 Aktuelle Ziehungen
+  // if openDraws && openDraws.length > 0
+  //   each draw in openDraws
+  //     div
+  //       h3 #{draw.name}
+  //       p Preis: #{draw.ticket_price} BTC
+  //       p Noch verfügbar: #{draw.remaining_tickets_in_draw}
+  // else
+  //   p Keine aktiven Ziehungen.

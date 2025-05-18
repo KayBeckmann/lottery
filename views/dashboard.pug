@@ -1,32 +1,57 @@
 extends layout.pug
 
 block content
-  h1 Dashboard für #{username}
+  h1 Mein Dashboard, #{username}!
 
-  div.ticket-info
-    h2 Deine Tickets
-    if userTicketCount > 0
-      p Du hast aktuell 
-        strong #{userTicketCount} 
-        | Ticket#{userTicketCount > 1 ? 's' : ''} gekauft.
-      p Deine Losnummer#{userTicketCount > 1 ? 'n' : ''}:
-      ul.ticket-numbers
-        each num in userTicketNumbers
-          li #{num}
-    else
-      p Du hast noch keine Tickets gekauft.
+  //- Flash-Nachrichten für Ticketkauf etc.
+  //- if success_msg && success_msg.length > 0
+  //-   .alert.alert-success #{success_msg}
+  //- if error_msg && error_msg.length > 0
+  //-   .alert.alert-danger #{error_msg}
+
+  h2 Offene Ziehungen
+  if openDraws && openDraws.length > 0
+    each draw in openDraws
+      .draw-info
+        h3 #{draw.name}
+        p Status: #{draw.status}
+        p Ticketpreis: #{parseFloat(draw.ticket_price).toFixed(8)} BTC (+ #{parseFloat(draw.processing_fee).toFixed(8)} BTC Gebühr)
+        p Gesamt verfügbare Tickets: #{draw.total_tickets}
+        p Bereits verkauft: #{draw.sold_tickets_in_draw}
+        p Noch verfügbar: 
+          strong #{draw.remaining_tickets_in_draw}
+        if draw.remaining_tickets_in_draw > 0
+          //- TODO: Formular für Ticketkauf hier einfügen oder Link
+          //- Dies erfordert eine POST-Route, z.B. /draws/#{draw.id}/buy-ticket
+          form(action=`/draws/${draw.id}/buy-ticket` method="POST" style="margin-top:10px;")
+            .form-group(style="display:flex; align-items:center; gap:10px;")
+              label(for=`quantity_${draw.id}` style="margin-bottom:0;") Anzahl:
+              input(type="number" id=`quantity_${draw.id}` name="quantity" value="1" min="1" max=draw.remaining_tickets_in_draw style="width: 70px; padding: 8px;")
+              button.btn.btn-success(type="submit") Ticket(s) kaufen
+        else
+          p Für diese Ziehung sind alle Tickets verkauft oder sie ist nicht mehr offen.
+  else
+    p Aktuell gibt es keine offenen Ziehungen.
 
   hr
 
-  div.ticket-info
-    h2 Ticket-Verkauf Status
-    p Insgesamt verkaufte Tickets: 
-      strong #{totalSoldTickets} / #{maxTickets}
-    if remainingTickets > 0
-      p Noch verfügbare Tickets bis zur Ziehung: 
-        strong #{remainingTickets}
-    else
-      p Alle Tickets sind verkauft! Die Ziehung kann bald beginnen.
-
-  // Später hier einen Button zum Ticketkauf etc. hinzufügen
-  // a(href="/buy-ticket" class="btn btn-primary") Ticket kaufen
+  h2 Meine gekauften Tickets
+  if userTicketsByDraw && userTicketsByDraw.length > 0
+    each drawGroup in userTicketsByDraw
+      .draw-info
+        h3 Tickets für Ziehung: #{drawGroup.draw_name}
+        p Status der Ziehung: #{drawGroup.draw_status}
+        if drawGroup.tickets && drawGroup.tickets.length > 0
+          p Deine Losnummern in dieser Ziehung:
+          ul.draw-ticket-list
+            each ticket in drawGroup.tickets
+              li 
+                strong ##{ticket.number} 
+                | (Status: #{ticket.status})
+                if ticket.status === 'pending_payment'
+                  // TODO: Hinweis zur Zahlung / Zahlungsdetails anzeigen
+                  small  - Zahlung ausstehend
+        else
+          p Du hast keine Tickets für diese Ziehung.
+  else
+    p Du hast noch keine Tickets für eine Ziehung gekauft.

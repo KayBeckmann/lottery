@@ -2,23 +2,23 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:15 # Du kannst hier eine spezifische PostgreSQL-Version verwenden
+    image: postgres:15
     container_name: btc_ticket_postgres_dev
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: passwort # Entspricht dem Passwort in deiner DATABASE_URL
-      POSTGRES_DB: btc_ticket_db   # Entspricht der Datenbank in deiner DATABASE_URL
+      POSTGRES_PASSWORD: passwort
+      POSTGRES_DB: btc_ticket_db
     ports:
-      - "5432:5432" # Mappt den Port vom Container auf deinen Host
+      - "5432:5432"
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data # Persistente Speicherung der Daten
-      - ./initdb:/docker-entrypoint-initdb.d # Verzeichnis mit Initialisierungs-Skripten
+      - ./postgres_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d btc_ticket_db"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-#volumes:
-  #postgres_data: # Definiert das benannte Volume für die Datenpersistenz
+# volumes:
+  # postgres_data:

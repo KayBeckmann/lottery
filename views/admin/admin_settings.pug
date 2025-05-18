@@ -1,27 +1,33 @@
 extends ../layout.pug
 
 block content
-  h1 Verlosungseinstellungen
+  h1 Globale Verlosungseinstellungen
 
-  //- Hier Flash-Nachrichten anzeigen, wenn connect-flash eingerichtet ist
-  //- include ../partials/messages
+  //- Flash-Nachrichten (wenn connect-flash eingerichtet ist)
+  //- if success_msg && success_msg.length > 0
+  //-   .alert.alert-success #{success_msg}
+  //- if error_msg && error_msg.length > 0
+  //-   .alert.alert-danger #{error_msg}
+
+  p Diese Einstellungen dienen als Standardwerte beim Erstellen neuer Ziehungen oder für andere globale Aspekte der Anwendung.
 
   form(action="/admin/settings" method="POST")
-    .form-group(style="margin-bottom: 15px;")
-      label(for="max_tickets") Maximale Anzahl an Tickets:
-      input.form-control(type="number" id="max_tickets" name="max_tickets" value=settings.max_tickets || 100 min="1" style="width: 200px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;")
+    .form-group
+      label(for="default_max_tickets_per_draw") Standardmäßige maximale Anzahl an Tickets pro Ziehung:
+      input.form-control(type="number" id="default_max_tickets_per_draw" name="default_max_tickets_per_draw" value=settings.default_max_tickets_per_draw || 100 min="1")
 
-    .form-group(style="margin-bottom: 15px;")
-      label(for="btc_ticket_price") Ticketpreis in BTC (z.B. 0.001):
-      input.form-control(type="text" id="btc_ticket_price" name="btc_ticket_price" value=settings.btc_ticket_price || '0.001' style="width: 200px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;")
+    .form-group
+      label(for="default_ticket_price") Standard-Ticketpreis in BTC (z.B. 0.001):
+      input.form-control(type="text" id="default_ticket_price" name="default_ticket_price" value=settings.default_ticket_price || '0.001' pattern="[0-9]+(\\.[0-9]+)?")
 
-    .form-group(style="margin-bottom: 15px;")
-      label(for="processing_fee_btc") Bearbeitungsgebühr in BTC (z.B. 0.0001):
-      input.form-control(type="text" id="processing_fee_btc" name="processing_fee_btc" value=settings.processing_fee_btc || '0.0001' style="width: 200px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;")
+    .form-group
+      label(for="default_processing_fee_btc") Standard-Bearbeitungsgebühr in BTC (z.B. 0.0001):
+      input.form-control(type="text" id="default_processing_fee_btc" name="default_processing_fee_btc" value=settings.default_processing_fee_btc || '0.0001' pattern="[0-9]+(\\.[0-9]+)?")
 
-    //- Weitere Einstellungen hier...
+    //- Weitere globale Einstellungen hier...
 
-    button.btn.btn-primary(type="submit" style="padding: 10px 15px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer;") Einstellungen speichern
+    button.btn.btn-primary(type="submit") Einstellungen speichern
 
   hr
-  a(href="/admin") Zurück zum Admin Dashboard
+  p
+    a(href="/admin") Zurück zum Admin Dashboard

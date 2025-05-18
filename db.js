@@ -3,9 +3,8 @@ const { Pool } = require('pg');
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    // Optional: SSL-Konfiguration für Produktionsdatenbanken (z.B. Heroku, AWS RDS)
     // ssl: {
-    //   rejectUnauthorized: false // Notwendig für einige Cloud-Provider
+    //   rejectUnauthorized: false
     // }
 });
 
@@ -20,5 +19,5 @@ pool.on('error', (err) => {
 
 module.exports = {
     query: (text, params) => pool.query(text, params),
-    pool: pool, // Exportiere den Pool, falls du komplexere Transaktionen benötigst
+    pool: pool,
 };

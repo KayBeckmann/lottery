@@ -7,30 +7,41 @@ html(lang="de")
     style.
       body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
       .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-      h1, h2 { color: #0056b3; }
-      .ticket-info { margin-bottom: 15px; }
-      .ticket-numbers { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 5px; }
-      .ticket-numbers li { background-color: #e9ecef; padding: 5px 10px; border-radius: 4px; font-weight: bold; }
+      h1, h2, h3 { color: #0056b3; }
+      .ticket-info, .draw-info { margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;}
+      .ticket-numbers, .draw-ticket-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+      .ticket-numbers li, .draw-ticket-list li { background-color: #e9ecef; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 0.9em; }
       nav { background-color: #0056b3; padding: 10px; margin-bottom: 20px; border-radius: 4px; }
-      nav a { color: white; margin-right: 15px; text-decoration: none; }
+      nav a { color: white; margin-right: 15px; text-decoration: none; font-weight: bold; }
       nav a:hover { text-decoration: underline; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: white; }
+      th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+      th { background-color: #e9ecef; color: #0056b3; }
+      tr:nth-child(even) { background-color: #f9f9f9; }
+      .btn { display: inline-block; padding: 10px 15px; margin-top:5px; margin-bottom:5px; font-size: 1em; font-weight: bold; text-align: center; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; }
+      .btn-primary { background-color: #0056b3; }
+      .btn-primary:hover { background-color: #004494; }
+      .btn-success { background-color: #28a745; }
+      .btn-success:hover { background-color: #1e7e34; }
+      .btn-danger { background-color: #dc3545; }
+      .btn-danger:hover { background-color: #c82333; }
+      .form-group { margin-bottom: 15px; }
+      .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+      .form-group input[type="text"], .form-group input[type="number"], .form-group input[type="file"], .form-group textarea, .form-group select { width: 100%; max-width: 400px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+      .form-group textarea { min-height: 100px; }
+      .alert { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; }
+      .alert-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+      .alert-danger { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+
 
   body
     nav
       a(href="/") Start
-      //- if isAuthenticated // Sobald echte Authentifizierung da ist
-      //- Für unsere Simulation:
       if currentUser
         a(href="/dashboard") Mein Dashboard
-        //- Nur für Admins:
         if currentUser.role === 'admin'
           a(href="/admin") Admin Bereich
-      //- Später für echten Login/Logout:
-      //- if isAuthenticated
-      //-   a(href="/auth/logout") Abmelden
-      //- else
-      //-   a(href="/auth/login") Anmelden
-      //-   a(href="/auth/register") Registrieren
+      //- Später für echten Login/Logout
 
     div.container
       block content

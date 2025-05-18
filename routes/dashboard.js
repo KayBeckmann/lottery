@@ -3,63 +3,66 @@ const router = express.Router();
 const db = require('../db'); // Unser Datenbankmodul
 
 // Dashboard-Route
-router.get('/', async (req, res, next) => { // next für Fehlerbehandlung hinzugefügt
-    // Der angemeldete Benutzer wird jetzt durch die Middleware in app.js in req.user bereitgestellt
+router.get('/', async (req, res, next) => {
     if (!req.user || !req.user.id) {
-        // Sollte nicht passieren, wenn die Simulations-Middleware aktiv ist und korrekt funktioniert
         console.error("Dashboard: req.user oder req.user.id nicht verfügbar.");
-        // In einer echten App würde hier vielleicht ein Redirect zum Login erfolgen
         return res.status(401).send('Nicht authentifiziert. Bitte zuerst anmelden.');
     }
 
-    const currentUserId = req.user.id; // UUID vom simulierten/angemeldeten Benutzer
+    const currentUserId = req.user.id;
     const currentUsername = req.user.username;
 
     try {
-        // 1. Gekaufte Tickets des Benutzers (Anzahl und Nummern)
+        // 1. Aktive Ziehungen laden, für die der Benutzer Tickets kaufen kann
+        const openDrawsResult = await db.query(
+            `SELECT d.id, d.name, d.ticket_price, d.processing_fee, d.total_tickets, d.status,
+                    (d.total_tickets - COALESCE(COUNT(t.id), 0)) AS remaining_tickets_in_draw,
+                    COALESCE(COUNT(t.id), 0) as sold_tickets_in_draw
+             FROM draws d
+             LEFT JOIN tickets t ON d.id = t.draw_id AND t.status = 'paid'
+             WHERE d.status = 'open'
+             GROUP BY d.id, d.name, d.ticket_price, d.processing_fee, d.total_tickets, d.status
+             ORDER BY d.created_at DESC`
+        );
+        const openDraws = openDrawsResult.rows;
+
+        // 2. Gekaufte Tickets des Benutzers für alle Ziehungen
         const userTicketsResult = await db.query(
-            'SELECT ticket_number FROM tickets WHERE user_id = $1 AND status = $2 ORDER BY ticket_number ASC',
-            [currentUserId, 'paid']
+            `SELECT t.id as ticket_id, t.ticket_number_in_draw, t.status as ticket_status, t.created_at as purchase_date,
+                    d.id as draw_id, d.name as draw_name, d.status as draw_status
+             FROM tickets t
+             JOIN draws d ON t.draw_id = d.id
+             WHERE t.user_id = $1
+             ORDER BY d.created_at DESC, t.ticket_number_in_draw ASC`,
+            [currentUserId]
         );
-        const userTickets = userTicketsResult.rows;
-        const userTicketCount = userTickets.length;
-        const userTicketNumbers = userTickets.map(ticket => ticket.ticket_number);
+        const userTicketsByDraw = userTicketsResult.rows.reduce((acc, ticket) => {
+            if (!acc[ticket.draw_id]) {
+                acc[ticket.draw_id] = {
+                    draw_id: ticket.draw_id,
+                    draw_name: ticket.draw_name,
+                    draw_status: ticket.draw_status,
+                    tickets: []
+                };
+            }
+            acc[ticket.draw_id].tickets.push({
+                ticket_id: ticket.ticket_id,
+                number: ticket.ticket_number_in_draw,
+                status: ticket.ticket_status,
+                purchase_date: ticket.purchase_date
+            });
+            return acc;
+        }, {});
 
-        // 2. Gesamtzahl aller verkauften (bezahlten) Tickets
-        const totalSoldTicketsResult = await db.query(
-            "SELECT COUNT(*) AS total_sold FROM tickets WHERE status = 'paid'"
-        );
-        const totalSoldTickets = parseInt(totalSoldTicketsResult.rows[0].total_sold, 10);
-
-        // 3. Maximale Anzahl an Tickets (aus Einstellungen)
-        const maxTicketsSettingResult = await db.query(
-            "SELECT setting_value FROM settings WHERE setting_key = 'max_tickets'"
-        );
-        let maxTickets = 100; // Standardwert, falls nicht in DB gefunden
-        if (maxTicketsSettingResult.rows.length > 0 && maxTicketsSettingResult.rows[0].setting_value) {
-            maxTickets = parseInt(maxTicketsSettingResult.rows[0].setting_value, 10);
-        } else {
-            console.warn("Einstellung 'max_tickets' nicht in der Datenbank gefunden oder Wert ist null. Standardwert 100 wird verwendet.");
-        }
-
-        // 4. Verbleibende Tickets berechnen
-        const remainingTickets = Math.max(0, maxTickets - totalSoldTickets);
-
-        // Daten an das Pug-Template übergeben
         res.render('dashboard', {
             pageTitle: 'Mein Dashboard',
-            userTicketCount: userTicketCount,
-            userTicketNumbers: userTicketNumbers,
-            totalSoldTickets: totalSoldTickets,
-            maxTickets: maxTickets,
-            remainingTickets: remainingTickets,
-            username: currentUsername
+            username: currentUsername,
+            openDraws: openDraws,
+            userTicketsByDraw: Object.values(userTicketsByDraw) // Als Array übergeben für einfachere Iteration im Template
         });
 
     } catch (err) {
         console.error('Fehler beim Laden des Dashboards:', err);
-        // Fehler an den globalen Fehlerhandler weiterleiten
-        // Stellt sicher, dass der Fehlerhandler in app.js eine err.status Eigenschaft hat
         err.status = err.status || 500;
         next(err);
     }

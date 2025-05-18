@@ -1,0 +1,49 @@
+extends ../layout.pug
+
+block content
+  if draw && draw.id
+    h1 Ziehung Bearbeiten: #{draw.name}
+  else
+    h1 Neue Ziehung Erstellen
+
+  //- Flash-Nachrichten
+  //- if error_msg && error_msg.length > 0
+  //-   .alert.alert-danger #{error_msg}
+  
+  form(action=formAction method="POST")
+    .form-group
+      label(for="name") Name der Ziehung:
+      input.form-control(type="text" id="name" name="name" value=draw.name || '' required)
+
+    .form-group
+      label(for="ticket_price") Ticketpreis in BTC (z.B. 0.001):
+      input.form-control(type="text" id="ticket_price" name="ticket_price" value=draw.ticket_price ? parseFloat(draw.ticket_price).toFixed(8) : settings.default_ticket_price || '0.001' required pattern="[0-9]+(\\.[0-9]{1,8})?")
+      small Geben Sie einen gültigen Betrag ein, z.B. 0.001
+
+    .form-group
+      label(for="processing_fee") Bearbeitungsgebühr pro Ticket in BTC (z.B. 0.0001):
+      input.form-control(type="text" id="processing_fee" name="processing_fee" value=draw.processing_fee ? parseFloat(draw.processing_fee).toFixed(8) : settings.default_processing_fee_btc || '0.0001' required pattern="[0-9]+(\\.[0-9]{1,8})?")
+      small Geben Sie einen gültigen Betrag ein, z.B. 0.0001
+
+    .form-group
+      label(for="total_tickets") Maximale Anzahl an Tickets für diese Ziehung:
+      input.form-control(type="number" id="total_tickets" name="total_tickets" value=draw.total_tickets || settings.default_max_tickets_per_draw || 100 min="1" required)
+
+    if draw && draw.id // Nur beim Bearbeiten anzeigen
+      .form-group
+        label(for="status") Status der Ziehung:
+        select#status.form-control(name="status")
+          option(value="open" selected=draw.status === 'open') Offen (Tickets können verkauft werden)
+          option(value="closed" selected=draw.status === 'closed') Geschlossen (Kein Ticketverkauf mehr)
+          option(value="drawing_complete" selected=draw.status === 'drawing_complete') Ziehung abgeschlossen
+          option(value="cancelled" selected=draw.status === 'cancelled') Abgesagt
+    
+    button.btn.btn-primary(type="submit") 
+      if draw && draw.id
+        | Änderungen speichern
+      else
+        | Ziehung erstellen
+
+  hr
+  p
+    a(href="/admin/draws") Zurück zur Ziehungsübersicht

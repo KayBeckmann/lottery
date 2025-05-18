@@ -2,27 +2,119 @@
 const express = require('express');
 const router = express.Router();
 const db =require('../db');
-const { ensureAdmin } = require('../middleware/authMiddleware'); // Unsere Admin-Schutz-Middleware
-const multer = require('multer'); // Für Dateiuploads
-const csv = require('csv-parser'); // Für CSV-Verarbeitung
+const { ensureAdmin } = require('../middleware/authMiddleware');
+const multer = require('multer');
+const csv = require('csv-parser');
 const fs = require('fs');
 
-// Multer-Konfiguration (speichert temporär im 'uploads'-Ordner)
-// Erstelle einen Ordner 'uploads' im Hauptverzeichnis deines Projekts
 const upload = multer({ dest: 'uploads/' });
 
-
-// Alle Admin-Routen mit ensureAdmin schützen
 router.use(ensureAdmin);
 
 // Admin Dashboard
 router.get('/', (req, res) => {
     res.render('admin/admin_dashboard', {
         pageTitle: 'Admin Dashboard',
-        // Optional: Lade hier Statistiken oder andere Admin-Infos
     });
 });
 
+// --- Ziehungen (Draws) Management ---
+// Liste aller Ziehungen
+router.get('/draws', async (req, res) => {
+    try {
+        const result = await db.query('SELECT id, name, ticket_price, processing_fee, total_tickets, status, created_at FROM draws ORDER BY created_at DESC');
+        res.render('admin/admin_draws_list', { // Annahme: Neue Pug-Datei für die Listenansicht
+            pageTitle: 'Ziehungen Verwalten',
+            draws: result.rows,
+            success_msg: req.flash ? req.flash('success_msg') : null, // Für Flash-Nachrichten
+            error_msg: req.flash ? req.flash('error_msg') : null
+        });
+    } catch (err) {
+        console.error("Fehler beim Laden der Ziehungen:", err);
+        if (req.flash) req.flash('error_msg', 'Fehler beim Laden der Ziehungen.');
+        res.redirect('/admin');
+    }
+});
+
+// Formular zum Erstellen einer neuen Ziehung anzeigen
+router.get('/draws/new', (req, res) => {
+    res.render('admin/admin_draw_form', { // Annahme: Neue Pug-Datei für das Formular
+        pageTitle: 'Neue Ziehung Erstellen',
+        draw: {}, // Leeres Objekt für ein neues Formular
+        formAction: '/admin/draws/new'
+    });
+});
+
+// Neue Ziehung erstellen (POST)
+router.post('/draws/new', async (req, res) => {
+    const { name, ticket_price, processing_fee, total_tickets } = req.body;
+    if (!name || !ticket_price || !processing_fee || !total_tickets) {
+        // req.flash('error_msg', 'Bitte alle Felder ausfüllen.');
+        console.log('Fehlende Felder beim Erstellen der Ziehung.');
+        return res.redirect('/admin/draws/new');
+    }
+    try {
+        await db.query(
+            'INSERT INTO draws (name, ticket_price, processing_fee, total_tickets, status) VALUES ($1, $2, $3, $4, $5)',
+            [name, parseFloat(ticket_price), parseFloat(processing_fee), parseInt(total_tickets), 'open']
+        );
+        // req.flash('success_msg', 'Ziehung erfolgreich erstellt.');
+        console.log('Neue Ziehung erstellt:', name);
+        res.redirect('/admin/draws');
+    } catch (err) {
+        console.error('Fehler beim Erstellen der Ziehung:', err);
+        // req.flash('error_msg', 'Fehler beim Erstellen der Ziehung.');
+        res.redirect('/admin/draws/new');
+    }
+});
+
+// Formular zum Bearbeiten einer Ziehung anzeigen
+router.get('/draws/:id/edit', async (req, res) => {
+    try {
+        const drawId = req.params.id;
+        const result = await db.query('SELECT * FROM draws WHERE id = $1', [drawId]);
+        if (result.rows.length === 0) {
+            // req.flash('error_msg', 'Ziehung nicht gefunden.');
+            return res.redirect('/admin/draws');
+        }
+        res.render('admin/admin_draw_form', { // Wiederverwendung des Formulars
+            pageTitle: 'Ziehung Bearbeiten',
+            draw: result.rows[0],
+            formAction: `/admin/draws/${drawId}/edit`
+        });
+    } catch (err) {
+        console.error('Fehler beim Laden der Ziehung zum Bearbeiten:', err);
+        // req.flash('error_msg', 'Fehler beim Laden der Ziehung.');
+        res.redirect('/admin/draws');
+    }
+});
+
+// Ziehung aktualisieren (POST)
+router.post('/draws/:id/edit', async (req, res) => {
+    const drawId = req.params.id;
+    const { name, ticket_price, processing_fee, total_tickets, status } = req.body;
+    if (!name || !ticket_price || !processing_fee || !total_tickets || !status) {
+        // req.flash('error_msg', 'Bitte alle Felder ausfüllen.');
+        console.log('Fehlende Felder beim Bearbeiten der Ziehung.');
+        return res.redirect(`/admin/draws/${drawId}/edit`);
+    }
+    try {
+        await db.query(
+            'UPDATE draws SET name = $1, ticket_price = $2, processing_fee = $3, total_tickets = $4, status = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6',
+            [name, parseFloat(ticket_price), parseFloat(processing_fee), parseInt(total_tickets), status, drawId]
+        );
+        // req.flash('success_msg', 'Ziehung erfolgreich aktualisiert.');
+        console.log('Ziehung aktualisiert:', name);
+        res.redirect('/admin/draws');
+    } catch (err) {
+        console.error('Fehler beim Aktualisieren der Ziehung:', err);
+        // req.flash('error_msg', 'Fehler beim Aktualisieren der Ziehung.');
+        res.redirect(`/admin/draws/${drawId}/edit`);
+    }
+});
+
+
+// --- Bestehende Einstellungen und Wallet-Import ---
 // Seite für Einstellungen (GET)
 router.get('/settings', async (req, res) => {
     try {
@@ -32,46 +124,37 @@ router.get('/settings', async (req, res) => {
             settings[row.setting_key] = row.setting_value;
         });
         res.render('admin/admin_settings', {
-            pageTitle: 'Admin Einstellungen',
+            pageTitle: 'Globale Einstellungen',
             settings: settings
         });
     } catch (err) {
         console.error("Fehler beim Laden der Admin-Einstellungen:", err);
-        // req.flash('error_msg', 'Fehler beim Laden der Einstellungen.'); // Später mit connect-flash
         res.redirect('/admin');
     }
 });
 
 // Einstellungen speichern (POST)
 router.post('/settings', async (req, res) => {
-    const { max_tickets, btc_ticket_price, processing_fee_btc /* weitere Einstellungen */ } = req.body;
+    // Beispiel: default_ticket_price, default_processing_fee_btc
+    const { default_ticket_price, default_processing_fee_btc /* weitere Einstellungen */ } = req.body;
     try {
-        if (max_tickets) {
+        if (default_ticket_price) {
             await db.query(
-                `INSERT INTO settings (setting_key, setting_value) VALUES ('max_tickets', $1)
+                `INSERT INTO settings (setting_key, setting_value) VALUES ('default_ticket_price', $1)
                  ON CONFLICT (setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = CURRENT_TIMESTAMP`,
-                [max_tickets]
+                [default_ticket_price]
             );
         }
-        if (btc_ticket_price) {
+        if (default_processing_fee_btc) {
             await db.query(
-                `INSERT INTO settings (setting_key, setting_value) VALUES ('btc_ticket_price', $1)
+                `INSERT INTO settings (setting_key, setting_value) VALUES ('default_processing_fee_btc', $1)
                  ON CONFLICT (setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = CURRENT_TIMESTAMP`,
-                [btc_ticket_price]
+                [default_processing_fee_btc]
             );
         }
-        if (processing_fee_btc) {
-            await db.query(
-                `INSERT INTO settings (setting_key, setting_value) VALUES ('processing_fee_btc', $1)
-                 ON CONFLICT (setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = CURRENT_TIMESTAMP`,
-                [processing_fee_btc]
-            );
-        }
-        // req.flash('success_msg', 'Einstellungen erfolgreich gespeichert.');
-        console.log('Admin Einstellungen gespeichert.');
+        console.log('Globale Einstellungen gespeichert.');
     } catch (err) {
-        console.error('Fehler beim Speichern der Admin-Einstellungen:', err);
-        // req.flash('error_msg', 'Fehler beim Speichern der Einstellungen.');
+        console.error('Fehler beim Speichern der globalen Einstellungen:', err);
     }
     res.redirect('/admin/settings');
 });
@@ -86,7 +169,6 @@ router.get('/import-wallets', (req, res) => {
 // Wallet-Adressen importieren (POST) - CSV-Variante
 router.post('/import-wallets-csv', upload.single('walletCsv'), async (req, res) => {
     if (!req.file) {
-        // req.flash('error_msg', 'Bitte eine CSV-Datei auswählen.');
         console.log('Keine CSV-Datei ausgewählt');
         return res.redirect('/admin/import-wallets');
     }
@@ -105,10 +187,9 @@ router.post('/import-wallets-csv', upload.single('walletCsv'), async (req, res) 
             }
         })
         .on('end', async () => {
-            fs.unlinkSync(filePath); // Lösche die temporäre Datei
+            fs.unlinkSync(filePath); 
 
             if (addressesToImport.length === 0) {
-                // req.flash('error_msg', 'Keine gültigen Adressen in der CSV-Datei gefunden.');
                 console.log('Keine gültigen Adressen in CSV gefunden.');
                 return res.redirect('/admin/import-wallets');
             }
@@ -116,9 +197,6 @@ router.post('/import-wallets-csv', upload.single('walletCsv'), async (req, res) 
             const client = await db.pool.connect();
             try {
                 await client.query('BEGIN');
-                // Erstelle eine neue Tabelle `imported_wallets`, falls noch nicht vorhanden
-                // Diese speichert nur die Adressen, die Zuweisung erfolgt später.
-                // Alternativ: in `wallets` mit user_id = NULL und ohne private_key
                 await client.query(`
                     CREATE TABLE IF NOT EXISTS wallet_pool (
                         id SERIAL PRIMARY KEY,
@@ -140,12 +218,10 @@ router.post('/import-wallets-csv', upload.single('walletCsv'), async (req, res) 
                     }
                 }
                 await client.query('COMMIT');
-                // req.flash('success_msg', `${importedCount} neue Adressen importiert. ${skippedCount} Adressen wurden übersprungen.`);
                 console.log(`${importedCount} neue Adressen importiert. ${skippedCount} übersprungen.`);
             } catch (err) {
                 await client.query('ROLLBACK');
                 console.error('Fehler beim Importieren der Wallet-Adressen:', err);
-                // req.flash('error_msg', 'Fehler beim Importieren der Adressen.');
             } finally {
                 client.release();
             }
@@ -154,7 +230,6 @@ router.post('/import-wallets-csv', upload.single('walletCsv'), async (req, res) 
         .on('error', (error) => {
             fs.unlinkSync(filePath);
             console.error('Fehler beim Lesen der CSV-Datei:', error);
-            // req.flash('error_msg', 'Fehler beim Verarbeiten der CSV-Datei.');
             res.redirect('/admin/import-wallets');
         });
 });
@@ -162,15 +237,13 @@ router.post('/import-wallets-csv', upload.single('walletCsv'), async (req, res) 
 
 // Wallet-Adressen als Liste importieren (POST)
 router.post('/import-wallets-list', async (req, res) => {
-    const { walletList } = req.body; // walletList ist der Name des Textarea-Feldes
+    const { walletList } = req.body; 
 
     if (!walletList || typeof walletList !== 'string' || walletList.trim() === '') {
-        // req.flash('error_msg', 'Bitte geben Sie eine Liste von Wallet-Adressen ein.');
         console.log('Keine Wallet-Liste eingegeben');
         return res.redirect('/admin/import-wallets');
     }
 
-    // Adressen anhand von Zeilenumbrüchen, Kommas oder Leerzeichen trennen und leere Einträge filtern
     const addressesToImport = walletList
         .split(/[\s,;\t\n]+/)
         .map(addr => addr.trim())
@@ -178,7 +251,6 @@ router.post('/import-wallets-list', async (req, res) => {
 
 
     if (addressesToImport.length === 0) {
-        // req.flash('error_msg', 'Keine gültigen Adressen in der Liste gefunden.');
         console.log('Keine gültigen Adressen in der Liste gefunden');
         return res.redirect('/admin/import-wallets');
     }
@@ -200,7 +272,6 @@ router.post('/import-wallets-list', async (req, res) => {
         `);
 
         for (const address of addressesToImport) {
-            // Hier könntest du noch eine Validierung für das BTC-Adressformat einbauen
             const existingWallet = await client.query('SELECT id FROM wallet_pool WHERE btc_address = $1', [address]);
             if (existingWallet.rows.length === 0) {
                 await client.query('INSERT INTO wallet_pool (btc_address) VALUES ($1)', [address]);
@@ -210,12 +281,10 @@ router.post('/import-wallets-list', async (req, res) => {
             }
         }
         await client.query('COMMIT');
-        // req.flash('success_msg', `${importedCount} neue Adressen aus Liste importiert. ${skippedCount} Adressen wurden übersprungen.`);
         console.log(`${importedCount} neue Adressen aus Liste importiert. ${skippedCount} übersprungen.`);
     } catch (err) {
         await client.query('ROLLBACK');
         console.error('Fehler beim Importieren der Wallet-Adressen aus Liste:', err);
-        // req.flash('error_msg', 'Fehler beim Importieren der Adressen aus Liste.');
     } finally {
         client.release();
     }
