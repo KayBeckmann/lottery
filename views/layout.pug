@@ -37,11 +37,14 @@ html(lang="de")
   body
     nav
       a(href="/") Start
-      if currentUser
+      //- Wird jetzt durch die Session und globale Variable in app.js gesetzt
+      if isAuthenticated 
         a(href="/dashboard") Mein Dashboard
         if currentUser.role === 'admin'
           a(href="/admin") Admin Bereich
-      //- Später für echten Login/Logout
+        a(href="/auth/logout") Abmelden
+      else
+        a(href="/auth/login") Anmelden / Registrieren
 
     div.container
       block content

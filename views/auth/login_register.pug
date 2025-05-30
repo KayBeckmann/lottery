@@ -1,0 +1,71 @@
+//- Da diese Seite ein eigenes Body-Styling hat, verwenden wir hier nicht das Standard-layout.pug
+//- Alternativ könnte man layout.pug anpassen, um eine Variable für die Body-Klasse zu akzeptieren.
+//- Für Einfachheit hier eine eigenständige Struktur, aber die Metadaten etc. sollten konsistent sein.
+doctype html
+html(lang="de")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title #{pageTitle || 'Anmelden'} - BTC Ticket App
+
+    //- Boxicons CSS (wie im Original HTML)
+    link(href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet')
+    
+    //- Eigene CSS-Datei für diese Seite
+    link(rel="stylesheet", href="/css/login_register_style.css")
+
+  body.login-page // Spezifische Klasse für Body-Styling
+
+    //- Flash-Nachrichten Container (optional, wenn connect-flash verwendet wird)
+    //- if error && error.length > 0
+    //-   div(style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background-color: #f8d7da; color: #721c24; padding: 10px 20px; border-radius: 5px; z-index: 2000; border: 1px solid #f5c6cb;")
+    //-     each msg in error
+    //-       div!= msg // Verwende != um HTML (wie <br>) zu rendern, sei vorsichtig mit User-Input!
+    //- if success_msg && success_msg.length > 0
+    //-   div(style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background-color: #d4edda; color: #155724; padding: 10px 20px; border-radius: 5px; z-index: 2000; border: 1px solid #c3e6cb;")
+    //-     each msg in success_msg
+    //-       div!= msg
+            
+    div.container-auth#container-auth // ID von CSS und JS referenziert
+      .form-container.sign-up
+        form(action="/auth/register" method="POST") // Action zur POST Route
+          h1 Konto Erstellen
+          .social-icons
+            a(href="#" class="icons"): i.bx.bxl-google
+            a(href="#" class="icons"): i.bx.bxl-facebook
+            //- Weitere Social Logins nach Bedarf
+            //- a(href="#" class="icons"): i.bx.bxl-github
+            //- a(href="#" class="icons"): i.bx.bxl-linkedin
+          span oder per E-Mail registrieren
+          input(type="text" name="name" placeholder="Name" required)
+          input(type="email" name="email" placeholder="E-Mail" required)
+          input(type="password" name="password" placeholder="Passwort" required)
+          button(type="submit") Registrieren
+
+      .form-container.sign-in
+        //- ID für direkten Link nach Registrierung oder bei Fehlern
+        form#login-form(action="/auth/login" method="POST") // Action zur POST Route
+          h1 Anmelden
+          .social-icons
+            a(href="#" class="icons"): i.bx.bxl-google
+            a(href="#" class="icons"): i.bx.bxl-facebook
+            //- Weitere Social Logins
+          span oder mit E-Mail & Passwort anmelden
+          input(type="email" name="email" placeholder="E-Mail" required)
+          input(type="password" name="password" placeholder="Passwort" required)
+          a(href="#") Passwort vergessen?
+          button(type="submit") Anmelden
+
+      .toggle-container
+        .toggle
+          .toggle-panel.toggle-left
+            h1 Willkommen zurück!
+            p Um mit uns verbunden zu bleiben, melde dich bitte mit deinen persönlichen Daten an.
+            button.hidden#login Anmelden
+          .toggle-panel.toggle-right
+            h1 Hallo, Freund!
+            p Gib deine persönlichen Daten ein und starte die Reise mit uns.
+            button.hidden#register Registrieren
+            
+    //- Eigenes JS für diese Seite
+    script(src="/js/login_register_script.js")

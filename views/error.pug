@@ -3,7 +3,8 @@ extends layout.pug
 block content
   h1= message
   h2= error.status
-  if error.stack && process.env.NODE_ENV === 'development' // Stack nur in Entwicklung anzeigen
+  //- Stack nur in Entwicklung anzeigen
+  if error.stack && process.env.NODE_ENV === 'development'
     h3 Stack Trace:
     pre #{error.stack}
   else if error.status === 404
