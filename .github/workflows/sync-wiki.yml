@@ -1,0 +1,75 @@
+name: Sync Docs to GitHub Wiki
+
+on:
+  push:
+    branches:
+      - main  # Oder dein Standardbranch, z.B. 'master'
+    paths:
+      - 'docs/**'  # Aktion nur ausführen, wenn sich etwas im 'docs'-Ordner ändert
+      - '.github/workflows/sync-wiki.yml' # Aktion auch ausführen, wenn der Workflow selbst geändert wird
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Haupt-Repository
+        uses: actions/checkout@v4
+        with:
+          path: main_repo # Checkout des Haupt-Repos in einen spezifischen Pfad
+
+      - name: Checkout Wiki-Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki # Standardname für das Wiki-Repository
+          path: wiki_repo # Checkout des Wikis in einen spezifischen Pfad
+          token: ${{ secrets.GH_PAT_WIKI }} # Verwendet das erstellte Secret
+
+      - name: Dokumentation ins Wiki synchronisieren
+        run: |
+          # Prüfen, ob der docs-Ordner existiert
+          if [ ! -d "main_repo/docs" ]; then
+            echo "Dokumentationsordner 'main_repo/docs' nicht gefunden. Nichts zu synchronisieren."
+            exit 0 
+          fi
+          
+          # Prüfen, ob der docs-Ordner leer ist
+          if [ -z "$(ls -A main_repo/docs)" ]; then
+            echo "Dokumentationsordner 'main_repo/docs' ist leer. Nichts zu synchronisieren."
+            exit 0
+          fi
+
+          # Zielverzeichnis im Wiki (Wurzelverzeichnis des Wikis)
+          WIKI_DIR="wiki_repo"
+
+          echo "Synchronisiere 'main_repo/docs/' mit '$WIKI_DIR/' menggunakan rsync..."
+          # rsync ist robust: fügt hinzu, aktualisiert und löscht Dateien im Wiki,
+          # damit es ein Spiegelbild des 'docs'-Ordners wird.
+          # --delete entfernt Dateien aus wiki_repo, die nicht mehr in main_repo/docs vorhanden sind.
+          # --exclude='.git' ist eine gute Praxis, obwohl hier nicht direkt relevant, da wir in das Wiki-Root kopieren.
+          # Das Trailing Slash bei 'main_repo/docs/' ist wichtig für rsync, um den *Inhalt* des Ordners zu kopieren.
+          rsync -av --delete --exclude='.git' main_repo/docs/ "$WIKI_DIR/"
+
+          echo "Dokumentation erfolgreich synchronisiert."
+
+      - name: Änderungen committen und ins Wiki pushen
+        working-directory: wiki_repo # Führe Git-Operationen im wiki_repo-Verzeichnis aus
+        run: |
+          # Git konfigurieren
+          git config user.name "${{ github.actor }}" # Verwendet den Namen des GitHub-Akteurs (der den Push ausgelöst hat)
+          git config user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com" # Standard-Noreply-E-Mail
+
+          # Prüfen, ob es Änderungen zum Committen gibt
+          # 'git diff --quiet' prüft ungestagete Änderungen, 'git diff --staged --quiet' prüft gestagete Änderungen.
+          # Wenn beides keine Änderungen anzeigt, gibt es nichts zu tun.
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "Keine Änderungen im Wiki zum Committen."
+          else
+            git add .
+            git commit -m "Docs: Dokumentation aus Haupt-Repository synchronisiert [skip ci]"
+            git push
+            echo "Wiki erfolgreich aktualisiert."
+          fi
+        env:
+          # Der Checkout-Schritt mit dem PAT sollte die Authentifizierung für den Push bereits eingerichtet haben.
+          # Explizite Angabe des Tokens für den Push ist meist nicht nötig, wenn der Checkout korrekt konfiguriert wurde.
+          GITHUB_TOKEN: ${{ secrets.GH_PAT_WIKI }} # Sicherstellen, dass der Token auch für den Push-Kontext verfügbar ist
