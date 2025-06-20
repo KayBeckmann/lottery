@@ -1,53 +1,20 @@
-//- views/admin/admin_overview.pug
-extends ../layout.pug
+extends admin_layout
 
-block content
-  .admin-container
-    h1 System-Übersicht
+block admin_content
+  h1.mb-4 #{pageTitle}
 
-    //- Warnmeldung, wenn die Anzahl der Adressen niedrig ist
-    if showWalletWarning
-      .alert.alert-danger(role='alert')
-        h4.alert-heading Achtung!
-        p 
-          | Es sind nur noch 
-          strong #{unusedWallets}
-          |  ungenutzte Bitcoin-Adressen verfügbar.
-        hr
-        p.mb-0 Bitte fügen Sie bald neue Adressen zum Wallet-Pool hinzu, um sicherzustellen, dass neue Ticketkäufe abgewickelt werden können.
+  if showWalletWarning
+    .alert.alert-warning
+      | Achtung: Es sind nur noch <strong>#{unusedWallets}</strong> ungenutzte Wallet-Adressen im Pool verfügbar. Bitte importiere bald neue Adressen.
 
-    .stats-grid
-      .stat-card
-        h3 Gesamtanzahl Benutzer
-        p.stat-number #{totalUsers}
-      
-      .stat-card
-        h3 Verfügbare BTC-Adressen
-        p.stat-number(class=showWalletWarning ? 'text-danger' : '') #{unusedWallets}
-
-    hr
-    a.btn.btn-secondary(href='/admin') Zurück zum Admin Dashboard
-
-  //- Kleiner CSS-Zusatz für die Darstellung.
-  style.
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      margin-top: 2rem;
-    }
-    .stat-card {
-      background-color: #f8f9fa;
-      padding: 20px;
-      border-radius: 8px;
-      text-align: center;
-      border: 1px solid #dee2e6;
-    }
-    .stat-number {
-      font-size: 2.5rem;
-      font-weight: bold;
-      margin: 0;
-    }
-    .text-danger {
-      color: #dc3545 !important;
-    }
+  .row
+    .col-md-6
+      .card.text-center
+        .card-body
+          h5.card-title Gesamte Benutzer
+          p.card-text.fs-2 #{totalUsers}
+    .col-md-6
+      .card.text-center
+        .card-body
+          h5.card-title Verfügbare Wallets
+          p.card-text.fs-2 #{unusedWallets}

@@ -1,0 +1,13 @@
+extends ../layout
+
+block content
+  .row
+    .col-md-3
+      h2 Admin Menü
+      .list-group
+        a(href="/admin/overview" class=(pageTitle === 'System-Übersicht' ? 'list-group-item list-group-item-action active' : 'list-group-item list-group-item-action')) Übersicht
+        a(href="/admin/draws" class=(pageTitle.includes('Ziehung') ? 'list-group-item list-group-item-action active' : 'list-group-item list-group-item-action')) Ziehungen
+        a(href="/admin/import-wallets" class=(pageTitle === 'Wallets importieren' ? 'list-group-item list-group-item-action active' : 'list-group-item list-group-item-action')) Wallets Importieren
+        a(href="/admin/settings" class=(pageTitle === 'Einstellungen' ? 'list-group-item list-group-item-action active' : 'list-group-item list-group-item-action')) Einstellungen
+    .col-md-9
+      block admin_content

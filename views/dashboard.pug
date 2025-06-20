@@ -1,41 +1,49 @@
-//- views/dashboard.pug
 extends layout
 
 block content
-  h1 Willkommen, #{username}!
+  h1.mb-4 Guten Tag, #{username}!
 
-  // Section for buying new tickets
-  section.draws
-    h2 Offene Ziehungen
+  // Abschnitt zum Kaufen von Tickets
+  section#open-draws.mb-5
+    h2.border-bottom.pb-2.mb-3 Offene Ziehungen
     if openDraws && openDraws.length > 0
-      .draw-list
+      .row
         each draw in openDraws
-          .draw-card
-            h3= draw.name
-            p Preis pro Ticket: #{draw.ticket_price} BTC
-            p Bearbeitungsgebühr: #{draw.processing_fee} BTC
-            p Verbleibende Tickets: #{draw.remaining_tickets_in_draw} / #{draw.total_tickets}
-            if draw.remaining_tickets_in_draw > 0
-              form(action=`/draw/${draw.id}/buy`, method='POST')
-                button.btn.btn-primary(type='submit') 1 Ticket kaufen
-            else
-              p Ausverkauft!
+          .col-md-6.mb-4
+            .card.h-100
+              .card-header
+                h5.mb-0= draw.name
+              .card-body
+                ul.list-unstyled.mb-0
+                  li Preis pro Ticket: <strong>#{draw.ticket_price} BTC</strong>
+                  li Bearbeitungsgebühr: <strong>#{draw.processing_fee} BTC</strong>
+                  li Verbleibende Tickets: <strong>#{draw.remaining_tickets_in_draw}</strong> / #{draw.total_tickets}
+              .card-footer
+                if draw.remaining_tickets_in_draw > 0
+                  // Das Formular wurde an die bestehende Route in `routes/ticket.js` angepasst
+                  form(action=`/tickets/buy`, method='POST')
+                    input(type="hidden" name="draw_id" value=draw.id)
+                    button.btn.btn-primary.w-100(type='submit') 1 Ticket kaufen
+                else
+                  button.btn.btn-secondary.w-100(disabled) Ausverkauft!
     else
-      p Derzeit gibt es keine offenen Ziehungen.
+      .alert.alert-info Derzeit gibt es keine offenen Ziehungen.
 
-  // Section for viewing already purchased tickets
-  section.user-tickets
-    h2 Meine gekauften Tickets
+  // Abschnitt für gekaufte Tickets
+  section#user-tickets
+    h2.border-bottom.pb-2.mb-3 Meine gekauften Tickets
     if userTicketsByDraw && userTicketsByDraw.length > 0
       each drawGroup in userTicketsByDraw
-        .ticket-group
-          h3 Ziehung: #{drawGroup.draw_name} (#{drawGroup.draw_status})
-          ul.ticket-list
+        .card.mb-3
+          .card-header
+            h5.mb-0 Ziehung: #{drawGroup.draw_name} (#{drawGroup.draw_status})
+          ul.list-group.list-group-flush
             each ticket in drawGroup.tickets
-              li.ticket-item
-                | Ticket ##{ticket.number} - Status: 
-                strong= ticket.status
+              li.list-group-item.d-flex.justify-content-between.align-items-center
+                span
+                  | Ticket #<strong>{ticket.number}</strong> - Status: 
+                  strong= ticket.status
                 if ticket.status === 'pending_payment'
-                  a(href=`/ticket/${ticket.ticket_id}/payment`) (Zahlungsdetails anzeigen)
+                  a.btn.btn-sm.btn-outline-primary(href=`/tickets/${ticket.ticket_id}/payment`) Zahlungsdetails anzeigen
     else
-      p Du hast noch keine Tickets gekauft.
+      .alert.alert-info Du hast noch keine Tickets gekauft.

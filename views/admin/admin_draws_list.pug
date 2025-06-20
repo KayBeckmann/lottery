@@ -1,48 +1,32 @@
-extends ../layout.pug
+extends admin_layout
 
-block content
-  h1 Ziehungen Verwalten
+block admin_content
+  .d-flex.justify-content-between.align-items-center.mb-4
+    h1 #{pageTitle}
+    a.btn.btn-primary(href="/admin/draws/new") Neue Ziehung erstellen
 
-  //- Flash-Nachrichten (optional, wenn connect-flash verwendet wird)
-  //- if success_msg && success_msg.length > 0
-  //-   .alert.alert-success #{success_msg}
-  //- if error_msg && error_msg.length > 0
-  //-   .alert.alert-danger #{error_msg}
-
-  p
-    a.btn.btn-success(href="/admin/draws/new") + Neue Ziehung Erstellen
-
-  if draws && draws.length > 0
-    table
-      thead
-        tr
-          th Name
-          th Ticketpreis (BTC)
-          th Gebühr (BTC)
-          th Max. Tickets
-          th Verkauft
-          th Status
-          th Erstellt am
-          th Aktionen
-      tbody
-        each draw in draws
-          - const ticketPrice = parseFloat(draw.ticket_price)
-          - const processingFee = parseFloat(draw.processing_fee)
-          - const soldTickets = draw.sold_tickets_in_draw_count || (draw.total_tickets - (draw.remaining_tickets_in_draw !== undefined ? draw.remaining_tickets_in_draw : draw.total_tickets) )
-          tr
-            td #{draw.name}
-            td #{ticketPrice.toFixed(8)}
-            td #{processingFee.toFixed(8)}
-            td #{draw.total_tickets}
-            td #{soldTickets !== undefined ? soldTickets : 'N/A'} 
-            td #{draw.status}
-            td #{new Date(draw.created_at).toLocaleString('de-DE')}
-            td
-              a.btn.btn-primary(href=`/admin/draws/${draw.id}/edit` style="margin-right: 5px;") Bearbeiten
-              //- Optional: Weitere Aktionen wie Schließen/Öffnen, Details etc.
-  else
-    p Es wurden noch keine Ziehungen erstellt.
-
-  hr
-  p
-    a(href="/admin") Zurück zum Admin Dashboard
+  .card
+    .card-body
+      .table-responsive
+        table.table
+          thead
+            tr
+              th ID
+              th Name
+              th Status
+              th Ticketpreis
+              th Tickets (Verkauft / Gesamt)
+              th Erstellt am
+          tbody
+            if draws && draws.length
+              each draw in draws
+                tr
+                  td= draw.id
+                  td= draw.name
+                  td= draw.status
+                  td= draw.ticket_price + ' BTC'
+                  td= `${draw.sold_tickets} / ${draw.total_tickets}`
+                  td= new Date(draw.created_at).toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })
+            else
+              tr
+                td(colspan="6") Keine Ziehungen gefunden.

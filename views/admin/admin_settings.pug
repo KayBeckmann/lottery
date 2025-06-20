@@ -1,8 +1,10 @@
-extends ../layout.pug
+extends admin_layout
 
-block content
-  h1 Globale Verlosungseinstellungen
+block admin_content
+  h1.mb-4 #{pageTitle}
 
+  .card
+    .card-body
   //- Flash-Nachrichten (wenn connect-flash eingerichtet ist)
   //- if success_msg && success_msg.length > 0
   //-   .alert.alert-success #{success_msg}
