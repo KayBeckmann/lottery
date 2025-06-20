@@ -9,6 +9,9 @@ const session = require('express-session'); // Hinzufügen für Sessions
 const dashboardRouter = require('./routes/dashboard');
 const adminRouter = require('./routes/admin');
 const authRouter = require('./routes/auth'); // Neue Auth-Routen
+const drawRouter = require('./routes/draw'); // Import für Draw-Routen
+const ticketRouter = require('./routes/ticket'); // Import für Ticket-Routen
+
 
 // // Passport Konfiguration (später, wenn du Passport einrichtest)
 // require('./config/passport')(passport); // Annahme: Passport-Konfig in config/passport.js
@@ -67,6 +70,8 @@ app.use((req, res, next) => {
 
 // Routen
 app.use('/auth', authRouter); // Auth-Routen vor anderen geschützten Routen
+app.use('/draw', drawRouter); // Routen für Ziehungen (z.B. Ticketkauf)
+app.use('/ticket', ticketRouter); // Routen für einzelne Tickets (z.B. Zahlungsdetails)
 app.get('/', (req, res) => {
     res.render('index', { pageTitle: 'Willkommen' });
 });

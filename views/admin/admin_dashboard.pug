@@ -1,16 +1,34 @@
+//- views/admin/admin_dashboard.pug
 extends ../layout.pug
 
 block content
-  h1 Admin Dashboard
+  .admin-container
+    h1 Admin Dashboard
+    p Willkommen im Admin-Bereich, #{user.username}.
 
-  p Willkommen im Admin-Bereich, #{currentUser.username}!
+    h3 Verwaltung
+    .list-group
+      a.list-group-item.list-group-item-action(href='/admin/overview')
+        | System-Übersicht anzeigen (Benutzer & Wallets)
+      a.list-group-item.list-group-item-action(href='/admin/import-wallets')
+        | Wallet-Adressen importieren
+      //- Hier könnten später weitere Links zu Admin-Funktionen stehen
+      //- a.list-group-item.list-group-item-action(href='/admin/draws') Ziehungen verwalten
 
-  h2 Aktionen
-  ul
-    li
-      a(href="/admin/draws") Ziehungen Verwalten
-    li
-      a(href="/admin/settings") Globale Verlosungseinstellungen
-    li
-      a(href="/admin/import-wallets") Wallet-Adressen importieren
-    //- Weitere Links hier...
+    hr
+    
+    h3 Neue Ziehung erstellen
+    form(action='/admin/draws', method='POST')
+      .form-group.mb-2
+        label(for='name') Name der Ziehung
+        input.form-control(type='text', id='name', name='name', required)
+      .form-group.mb-2
+        label(for='ticket_price') Ticketpreis (BTC)
+        input.form-control(type='text', id='ticket_price', name='ticket_price', required, placeholder='z.B. 0.001')
+      .form-group.mb-2
+        label(for='total_tickets') Gesamtzahl Tickets
+        input.form-control(type='number', id='total_tickets', name='total_tickets', required)
+      .form-group.mb-3
+        label(for='processing_fee') Bearbeitungsgebühr (BTC)
+        input.form-control(type='text', id='processing_fee', name='processing_fee', required, placeholder='z.B. 0.0001')
+      button.btn.btn-primary(type='submit') Neue Ziehung erstellen

@@ -75,7 +75,7 @@ ON CONFLICT (setting_key) DO NOTHING;
 
 -- Beispiel-Ziehung (Draw)
 INSERT INTO draws (name, ticket_price, processing_fee, total_tickets, status) VALUES
-('Erste Oster Verlosung', 0.001, 0.0001, 100, 'open')
+('Proof of concept', 0.001, 0.0001, 10, 'open')
 ON CONFLICT (id) DO NOTHING;
 
 -- Beispieldaten für Tickets (hier manuell, später durch Kaufsystem)

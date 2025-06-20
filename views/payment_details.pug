@@ -1,0 +1,40 @@
+//- views/payment_details.pug
+extends layout
+
+block content
+  .payment-container
+    h1 Zahlungsanweisung für Ticket
+    p 
+      | Bitte führe die folgenden Schritte aus, um deinen Ticketkauf für die Ziehung 
+      strong #{details.draw_name}
+      |  abzuschließen.
+
+    .payment-box
+      h3 Schritt 1: Überweise den exakten Betrag
+      p.amount
+        | Gesamtbetrag: 
+        strong #{parseFloat(details.total_amount).toFixed(8)} BTC
+      p.small-text
+        | (Ticketpreis: #{parseFloat(details.ticket_price).toFixed(8)} BTC + Bearbeitungsgebühr: #{parseFloat(details.processing_fee).toFixed(8)} BTC)
+
+      h3 Schritt 2: An die folgende Bitcoin-Adresse senden
+      p.wallet-address
+        code #{details.assigned_wallet_address}
+
+      h3 Schritt 3: Gib diese Referenz an (WICHTIG)
+      p 
+        | Damit wir deine Zahlung korrekt zuordnen können, gib bitte die folgende Ticket-ID im 
+        strong Verwendungszweck
+        |  deiner Transaktion an.
+      p.ticket-uuid
+        code #{details.ticket_id}
+
+    .notice
+      h4 Wichtige Hinweise
+      ul
+        li Sende den Betrag in einer einzigen Transaktion.
+        li Die Zuordnung der Zahlung erfolgt automatisch. Dies kann je nach Netzwerk-Auslastung einige Zeit dauern.
+        li Der Status deines Tickets im Dashboard wird automatisch auf "paid" aktualisiert, sobald die Zahlung bestätigt ist.
+        li Diese Zahlungsanweisung ist nur für dieses eine Ticket gültig.
+
+    a.btn.btn-secondary(href='/dashboard') Zurück zum Dashboard
