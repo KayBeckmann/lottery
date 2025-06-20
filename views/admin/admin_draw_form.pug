@@ -29,7 +29,8 @@ block content
       label(for="total_tickets") Maximale Anzahl an Tickets für diese Ziehung:
       input.form-control(type="number" id="total_tickets" name="total_tickets" value=draw.total_tickets || settings.default_max_tickets_per_draw || 100 min="1" required)
 
-    if draw && draw.id // Nur beim Bearbeiten anzeigen
+    // Nur beim Bearbeiten anzeigen
+    if draw && draw.id
       .form-group
         label(for="status") Status der Ziehung:
         select#status.form-control(name="status")
